@@ -47,7 +47,11 @@ class App {
     this.app.use(morgan(LOG_FORMAT, { stream }));
     this.app.use(cors({ origin: ORIGIN, credentials: CREDENTIALS }));
     this.app.use(hpp());
-    this.app.use(helmet());
+    this.app.use(
+      helmet({
+        crossOriginResourcePolicy: false,
+      })
+    );
     this.app.use(compression());
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
@@ -62,8 +66,8 @@ class App {
     const uploadsPath = path.join(__dirname, '..', '/public/images');
     console.log(uploadsPath);
 
-    this.app.get('/images/:filename', (req, res) => {
-      const filePath = path.join(uploadsPath, req.params.filename);
+    this.app.get('/images/:directory/:filename', (req, res) => {
+      const filePath = path.join(uploadsPath, req.params.directory, req.params.filename);
 
       // Vérifier si le fichier existe
       fs.access(filePath, fs.constants.F_OK, (err) => {
