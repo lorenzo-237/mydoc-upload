@@ -9,6 +9,8 @@ const hpp = require('hpp');
 const morgan = require('morgan');
 const { logger, stream } = require('./utils/logger');
 const { ErrorMiddleware } = require('./middlewares/error.middleware');
+const path = require('path');
+const fs = require('fs');
 
 class App {
   app;
@@ -25,6 +27,7 @@ class App {
     this._initializeMiddlewares();
     this._initializeRoutes(routes);
     this._initializeErrorHandling();
+    this._initializeUploadsFolder();
   }
 
   listen() {
@@ -56,13 +59,35 @@ class App {
       res.json({ message: 'le wqt est un animal aquatique nocturne' });
     });
 
+    const uploadsPath = path.join(__dirname, '..', '/public/images');
+    console.log(uploadsPath);
+
+    this.app.get('/images/:filename', (req, res) => {
+      const filePath = path.join(uploadsPath, req.params.filename);
+
+      // Vérifier si le fichier existe
+      fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+          res.status(404).json({
+            message: 'File not found!',
+          });
+        } else {
+          res.sendFile(filePath);
+        }
+      });
+    });
+
     routes.forEach((route) => {
-      this.app.use('/', route.router);
+      this.app.use('/api', route.router);
     });
   }
 
   _initializeErrorHandling() {
     this.app.use(ErrorMiddleware);
+  }
+
+  _initializeUploadsFolder() {
+    this.app.use(express.static('/public/images'));
   }
 }
 
