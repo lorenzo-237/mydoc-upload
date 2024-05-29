@@ -1,11 +1,24 @@
 const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
-    callback(null, 'public/images');
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = currentDate.getDate().toString().padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    const directory = path.join('public', 'images', dateString);
+    // Créer le répertoire s'il n'existe pas
+    if (!fs.existsSync(directory)) {
+      fs.mkdirSync(directory);
+    }
+
+    callback(null, directory);
   },
   filename: function (req, file, callback) {
-    callback(null, timestampToDateTimeString(Date.now()) + '-' + file.originalname);
+    callback(null, timestampToTimeString(Date.now()) + '_' + file.originalname);
   },
 });
 
@@ -37,4 +50,13 @@ function timestampToDateTimeString(timestamp) {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${year}${month}${day}_${hours}${minutes}`;
+}
+
+function timestampToTimeString(timestamp) {
+  const date = new Date(timestamp);
+
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${hours}${minutes}${seconds}`;
 }
